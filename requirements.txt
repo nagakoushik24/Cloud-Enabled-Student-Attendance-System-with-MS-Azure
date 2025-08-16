@@ -1,0 +1,4 @@
+Flask==3.0.2
+gunicorn
+Werkzeug==3.0.1
+pyodbc==5.2.0
