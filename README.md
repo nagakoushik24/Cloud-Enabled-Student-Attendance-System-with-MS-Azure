@@ -4,11 +4,11 @@ Role-based attendance monitoring system built with **Flask + PostgreSQL/Azure SQ
 
 ## Features
 - Admin, Teacher, Student roles with separate dashboards
-- Admin: manage users & generate attendance reports
-- Teacher: create classes & mark attendance
-- Student: view attendance & percentage
-- Deployed on Azure App Service with Azure SQL Database
-- Secure parameterized DB queries
+  - Admin: manage users & generate attendance reports
+  - Teacher: create classes & mark attendance
+  - Student: view attendance & percentage
+  - Deployed on Azure App Service with Azure SQL Database
+  - Secure parameterized DB queries
 
 ## Architecture & Tech Stack
 - **Backend:** Python (Flask)
