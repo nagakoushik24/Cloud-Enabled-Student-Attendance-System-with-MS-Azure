@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Attendance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #b3d4e1;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 2px 2px 15px 0px rgba(0, 3, 0, 0.7);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .submit-button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+        .nav {
+            margin-top: -67px;
+            margin-bottom: 80px;
+            padding: 10px;
+            background-color: #0099CC;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        .nav a {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #333;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-left: 20px;
+        }
+        .nav a:hover {
+            background-color: black;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h2>Mark Attendance</h2>
+    <div class="nav">
+        <a href="/teacher/dashboard">Dashboard</a>
+        <a href="/teacher/teacher_profile">Profile</a>
+        <a href="/logout">Logout</a>
+    </div>
+    
+    <form id="attendanceForm" method="POST" action="/teacher/mark_attendance/validate">
+        <label for="class_date">Class Date:</label>
+        <input type="date" id="class_date" name="class_date" required><br>
+
+        <label for="class_name">Class Name:</label>
+        <input type="text" id="class_name" name="class_name" required><br>
+
+        <label for="class_sec">Class Section:</label>
+        <input type="text" id="class_sec" name="class_sec" required><br>
+
+        <button type="button" class="submit-button" onclick="validateClassDetails()">Check Class Details</button>
+    </form>
+
+    <div id="studentList" style="display: none;">
+        <h3 style="text-align: center;">Student List</h3>
+        <form id="attendanceListForm" method="POST" action="/teacher/mark_attendance/update">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Attendance</th>
+                    </tr>
+                </thead>
+                <tbody id="students">
+                </tbody>
+            </table>
+            <br>
+            <input type="submit" value="Submit Attendance" class="submit-button" onclick="submitAttendance(event)">
+        </form>
+    </div>
+
+    <script>
+        async function validateClassDetails() {
+            const date = document.getElementById("class_date").value;
+            const className = document.getElementById("class_name").value;
+            const classSection = document.getElementById("class_sec").value;
+
+            try {
+                const response = await fetch("/teacher/mark_attendance/validate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ date, class_name: className, class_sec: classSection })
+                });
+
+                const result = await response.json();
+                console.log("Server response:", result);  // Debugging line
+
+                if (result.success) {
+                    // Populate the student list table
+                    const studentList = document.getElementById("students");
+                    studentList.innerHTML = "";  // Clear any previous list
+                    result.students.forEach(student => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${student.id}</td>
+                            <td>${student.name}</td>
+                            <td>
+                                <label><input type="radio" name="attendance_${student.id}" value="present" required> Present</label>
+                                <label><input type="radio" name="attendance_${student.id}" value="absent"> Absent</label>
+                            </td>
+                        `;
+                        studentList.appendChild(row);
+                    });
+                    document.getElementById("studentList").style.display = "block";
+                } else {
+                    alert(result.message || "Invalid class details or date.");
+                }
+            } catch (error) {
+                console.error("Error during validation:", error);
+                alert("An error occurred. Please try again.");
+            }
+        }
+
+        async function submitAttendance(event) {
+    // Prevent the default form submission
+    event.preventDefault();
+
+    const attendanceForm = document.getElementById("attendanceListForm");
+    const formData = new FormData(attendanceForm);
+
+    // Include the class date from the first form
+    const classDate = document.getElementById("class_date").value;
+    const className = document.getElementById("class_name").value;
+    const classSec = document.getElementById("class_sec").value;
+    
+    // Append these values to the form data
+    formData.append('class_date', classDate);
+    formData.append('class_name', className);
+    formData.append('class_sec', classSec);
+
+    try {
+        const response = await fetch(attendanceForm.action, {
+            method: "POST",
+            body: formData,
+        });
+
+        const result = await response.json();
+        console.log("Server response:", result);  // Debugging line
+        if (result.success) {
+            alert(result.message);
+            // Optionally, redirect or clear form
+        } else {
+            alert("Failed to submit attendance: " + result.message);
+        }
+    } catch (error) {
+        console.error("Error during submission:", error);
+        alert("An error occurred while submitting attendance. Please try again.");
+    }
+}
+
+    </script>
+</body>
+</html>
